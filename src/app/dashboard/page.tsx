@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles, RefreshCw, ExternalLink, PieChart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatNumber, getBillingDateText } from '@/lib/utils';
 import { CATEGORY_LABELS, CATEGORY_COLORS, Subscription, SubscriptionCategory } from '@/types/subscription';
@@ -73,8 +73,24 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(1350);
+  const [rateLoading, setRateLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  // 환율 가져오기
+  const fetchExchangeRate = async () => {
+    setRateLoading(true);
+    try {
+      const response = await fetch('/api/exchange-rate');
+      const data = await response.json();
+      setExchangeRate(data.rate);
+    } catch (error) {
+      console.error('Failed to fetch exchange rate:', error);
+    } finally {
+      setRateLoading(false);
+    }
+  };
 
   // 사용자 및 구독 데이터 로드
   useEffect(() => {
@@ -109,11 +125,15 @@ export default function DashboardPage() {
         setSubscriptions(data.map(dbToFrontend));
       }
 
+      // 환율 가져오기
+      fetchExchangeRate();
+
       setLoading(false);
     }
 
     loadData();
-  }, [router, supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -186,11 +206,51 @@ export default function DashboardPage() {
       .filter((sub) => sub.isActive)
       .reduce((total, sub) => {
         let monthlyPrice = sub.price;
-        if (sub.currency === 'USD') monthlyPrice *= 1350;
+        if (sub.currency === 'USD') monthlyPrice *= exchangeRate;
         if (sub.billingCycle === 'yearly') monthlyPrice /= 12;
         else if (sub.billingCycle === 'weekly') monthlyPrice *= 4;
         return total + monthlyPrice;
       }, 0);
+  };
+
+  // 카테고리별 지출 계산
+  const getCategoryData = () => {
+    const categoryTotals = subscriptions
+      .filter((sub) => sub.isActive)
+      .reduce((acc, sub) => {
+        let price = sub.price;
+        if (sub.currency === 'USD') price *= exchangeRate;
+        if (sub.billingCycle === 'yearly') price /= 12;
+        else if (sub.billingCycle === 'weekly') price *= 4;
+        acc[sub.category] = (acc[sub.category] || 0) + price;
+        return acc;
+      }, {} as Record<string, number>);
+
+    return Object.entries(categoryTotals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: monthlyTotal > 0 ? (amount / monthlyTotal) * 100 : 0,
+      }));
+  };
+
+  // 연간 vs 월간 비교 (절약 금액 계산)
+  const calculateSavings = () => {
+    const yearlySubscriptions = subscriptions.filter(
+      (sub) => sub.isActive && sub.billingCycle === 'yearly'
+    );
+
+    let savings = 0;
+    yearlySubscriptions.forEach((sub) => {
+      let yearlyPrice = sub.price;
+      if (sub.currency === 'USD') yearlyPrice *= exchangeRate;
+      // 월간으로 결제했다면 일반적으로 20% 더 비쌈
+      const monthlyEquivalent = (yearlyPrice / 12) * 1.2 * 12;
+      savings += monthlyEquivalent - yearlyPrice;
+    });
+
+    return savings;
   };
 
   const getUpcomingBillings = () => {
@@ -212,6 +272,8 @@ export default function DashboardPage() {
   const monthlyTotal = calculateMonthlyTotal();
   const yearlyTotal = monthlyTotal * 12;
   const upcomingBillings = getUpcomingBillings();
+  const categoryData = getCategoryData();
+  const yearlySavings = calculateSavings();
 
   if (loading) {
     return (
@@ -407,35 +469,84 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Category Summary */}
-        {subscriptions.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              카테고리별 지출
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(
-                subscriptions.reduce((acc, sub) => {
-                  if (!sub.isActive) return acc;
-                  let price = sub.price;
-                  if (sub.currency === 'USD') price *= 1350;
-                  if (sub.billingCycle === 'yearly') price /= 12;
-                  acc[sub.category] = (acc[sub.category] || 0) + price;
-                  return acc;
-                }, {} as Record<string, number>)
-              )
-                .sort((a, b) => b[1] - a[1])
-                .map(([category, amount]) => (
-                  <div key={category} className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}`} />
-                    <span className="flex-1 text-gray-700 dark:text-gray-300">
-                      {CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]}
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {formatNumber(amount)}원
-                    </span>
+        {/* Exchange Rate & Savings */}
+        {subscriptions.some((s) => s.currency === 'USD') && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">현재 환율</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  $1 = {formatNumber(exchangeRate)}원
+                </span>
+              </div>
+              <button
+                onClick={fetchExchangeRate}
+                disabled={rateLoading}
+                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+              >
+                <RefreshCw size={14} className={rateLoading ? 'animate-spin' : ''} />
+                새로고침
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Yearly Savings */}
+        {yearlySavings > 0 && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                <TrendingUp className="text-green-600 dark:text-green-400" size={20} />
+              </div>
+              <div>
+                <p className="font-medium text-green-800 dark:text-green-200">
+                  연간 결제로 {formatNumber(yearlySavings)}원 절약 중!
+                </p>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  월간 결제 대비 약 20% 할인 적용
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Category Summary with Chart */}
+        {subscriptions.length > 0 && categoryData.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <PieChart className="text-blue-600" size={20} />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                카테고리별 지출
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {categoryData.map(({ category, amount, percentage }) => (
+                <div key={category}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}`} />
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatNumber(amount)}원
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({percentage.toFixed(1)}%)
+                      </span>
+                    </div>
                   </div>
-                ))}
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}`}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
