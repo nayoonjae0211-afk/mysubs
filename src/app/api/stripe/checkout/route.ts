@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 // Stripe Checkout Session API
 
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const stripe = getStripe();
     const origin = request.headers.get('origin') || request.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
     // Checkout 세션 생성
