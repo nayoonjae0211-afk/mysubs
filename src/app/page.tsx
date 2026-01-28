@@ -185,7 +185,7 @@ export default function LandingPage() {
               </li>
             </ul>
             <Link
-              href="/auth/signup"
+              href="/pricing"
               className="block w-full py-3 text-center bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
             >
               프로 시작하기
