@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatNumber, getBillingDateText } from '@/lib/utils';
 import { CATEGORY_LABELS, CATEGORY_COLORS, Subscription, SubscriptionCategory } from '@/types/subscription';
 import AddSubscriptionModal from '@/components/subscription/AddSubscriptionModal';
 import SubscriptionCardDB from '@/components/subscription/SubscriptionCardDB';
 import type { User } from '@supabase/supabase-js';
+
+const FREE_LIMIT = 5; // 무료 사용자 구독 제한
 
 // DB에서 가져온 구독을 프론트엔드 타입으로 변환
 interface DBSubscription {
@@ -46,10 +49,13 @@ function dbToFrontend(db: DBSubscription): Subscription {
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [isPro, setIsPro] = useState(false);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   // 사용자 및 구독 데이터 로드
@@ -64,6 +70,18 @@ export default function DashboardPage() {
 
       setUser(user);
 
+      // 프로 상태 확인
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setIsPro(profile.is_pro);
+      }
+
+      // 구독 목록 로드
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -74,10 +92,16 @@ export default function DashboardPage() {
       }
 
       setLoading(false);
+
+      // 결제 성공 메시지
+      if (searchParams.get('success') === 'true') {
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 5000);
+      }
     }
 
     loadData();
-  }, [router, supabase]);
+  }, [router, supabase, searchParams]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -87,6 +111,13 @@ export default function DashboardPage() {
 
   const handleAddSubscription = async (subscription: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
+
+    // 무료 사용자 제한 체크
+    if (!isPro && subscriptions.length >= FREE_LIMIT) {
+      alert(`무료 플랜은 최대 ${FREE_LIMIT}개까지만 등록할 수 있습니다.\n프로로 업그레이드하면 무제한으로 이용 가능합니다.`);
+      router.push('/pricing');
+      return;
+    }
 
     const { data, error } = await supabase
       .from('subscriptions')
@@ -180,19 +211,44 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      {/* 결제 성공 메시지 */}
+      {showSuccessMessage && (
+        <div className="bg-green-500 text-white text-center py-3 px-4">
+          <Sparkles className="inline mr-2" size={20} />
+          프로 플랜으로 업그레이드되었습니다! 이제 무제한으로 이용하세요.
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                MySubs
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user?.email}
-              </p>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  MySubs
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {user?.email}
+                </p>
+              </div>
+              {isPro && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
+                  <Crown size={14} />
+                  PRO
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
+              {!isPro && (
+                <Link
+                  href="/pricing"
+                  className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all"
+                >
+                  <Crown size={16} />
+                  <span className="hidden sm:inline">프로 업그레이드</span>
+                </Link>
+              )}
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -250,10 +306,36 @@ export default function DashboardPage() {
             </div>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
               {activeSubscriptions.length}
-              <span className="text-lg font-normal text-gray-500">개</span>
+              {!isPro && (
+                <span className="text-lg font-normal text-gray-500">/{FREE_LIMIT}개</span>
+              )}
+              {isPro && (
+                <span className="text-lg font-normal text-gray-500">개</span>
+              )}
             </p>
           </div>
         </div>
+
+        {/* 무료 사용자 업그레이드 유도 */}
+        {!isPro && subscriptions.length >= FREE_LIMIT - 1 && (
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 mb-8 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Crown size={24} />
+                <div>
+                  <p className="font-semibold">프로로 업그레이드하세요</p>
+                  <p className="text-sm text-blue-100">무제한 구독 등록 + 결제일 알림 + 월간 리포트</p>
+                </div>
+              </div>
+              <Link
+                href="/pricing"
+                className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+              >
+                업그레이드
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Upcoming Billings */}
         {upcomingBillings.length > 0 && (
