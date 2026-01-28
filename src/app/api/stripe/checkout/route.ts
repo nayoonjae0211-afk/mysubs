@@ -14,30 +14,42 @@ export async function POST(request: Request) {
       );
     }
 
-    const { priceId } = await request.json();
+    const priceId = process.env.STRIPE_PRICE_ID;
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: 'STRIPE_PRICE_ID 환경변수가 설정되지 않았습니다.' },
+        { status: 500 }
+      );
+    }
+
+    const origin = request.headers.get('origin') || request.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
     // Checkout 세션 생성
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       line_items: [
         {
-          price: priceId || process.env.STRIPE_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
       mode: 'subscription',
-      success_url: `${request.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: `${request.headers.get('origin')}/pricing?canceled=true`,
+      success_url: `${origin}/dashboard?success=true`,
+      cancel_url: `${origin}/pricing?canceled=true`,
       metadata: {
         userId: user.id,
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Stripe checkout error:', error);
+
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
     return NextResponse.json(
-      { error: '결제 세션 생성에 실패했습니다.' },
+      { error: `결제 세션 생성 실패: ${message}` },
       { status: 500 }
     );
   }
