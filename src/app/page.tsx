@@ -221,9 +221,9 @@ export default function LandingPage() {
               MySubs - 구독 관리의 시작
             </p>
             <div className="flex gap-6 text-sm text-gray-500 dark:text-gray-400">
-              <a href="#" className="hover:text-gray-900 dark:hover:text-white">이용약관</a>
-              <a href="#" className="hover:text-gray-900 dark:hover:text-white">개인정보처리방침</a>
-              <a href="#" className="hover:text-gray-900 dark:hover:text-white">문의하기</a>
+              <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white">이용약관</Link>
+              <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white">개인정보처리방침</Link>
+              <Link href="/contact" className="hover:text-gray-900 dark:hover:text-white">문의하기</Link>
             </div>
           </div>
         </div>
