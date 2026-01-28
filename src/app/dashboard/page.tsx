@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles, RefreshCw, ExternalLink, PieChart } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles, RefreshCw, PieChart, Settings, Search, SlidersHorizontal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatNumber, getBillingDateText } from '@/lib/utils';
 import { CATEGORY_LABELS, CATEGORY_COLORS, Subscription, SubscriptionCategory } from '@/types/subscription';
@@ -75,8 +75,26 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(1350);
   const [rateLoading, setRateLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'billingDay'>('billingDay');
+  const [filterCategory, setFilterCategory] = useState<SubscriptionCategory | 'all'>('all');
   const router = useRouter();
   const supabase = createClient();
+
+  // Pro 사용자 구독 관리 (Stripe Portal)
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch('/api/stripe/portal', { method: 'POST' });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || '구독 관리 페이지를 열 수 없습니다.');
+      }
+    } catch {
+      alert('오류가 발생했습니다.');
+    }
+  };
 
   // 환율 가져오기
   const fetchExchangeRate = async () => {
@@ -296,9 +314,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   MySubs
-                </h1>
+                </Link>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {user?.email}
                 </p>
@@ -327,6 +345,15 @@ export default function DashboardPage() {
                 <Plus size={20} />
                 <span className="hidden sm:inline">구독 추가</span>
               </button>
+              {isPro && (
+                <button
+                  onClick={handleManageSubscription}
+                  className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="구독 관리"
+                >
+                  <Settings size={20} />
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -432,9 +459,61 @@ export default function DashboardPage() {
 
         {/* Subscription List */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            내 구독 목록
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              내 구독 목록 ({subscriptions.length}개)
+            </h2>
+
+            {subscriptions.length > 0 && (
+              <div className="flex items-center gap-2">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 sm:w-40"
+                  />
+                </div>
+
+                {/* Filter & Sort */}
+                <div className="relative group">
+                  <button className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <SlidersHorizontal size={16} className="text-gray-500" />
+                  </button>
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 hidden group-hover:block">
+                    <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-xs font-medium text-gray-500 mb-2">정렬</p>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as 'name' | 'price' | 'billingDay')}
+                        className="w-full text-sm bg-gray-100 dark:bg-gray-700 rounded px-2 py-1"
+                      >
+                        <option value="billingDay">결제일순</option>
+                        <option value="name">이름순</option>
+                        <option value="price">금액순</option>
+                      </select>
+                    </div>
+                    <div className="p-2">
+                      <p className="text-xs font-medium text-gray-500 mb-2">카테고리</p>
+                      <select
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value as SubscriptionCategory | 'all')}
+                        className="w-full text-sm bg-gray-100 dark:bg-gray-700 rounded px-2 py-1"
+                      >
+                        <option value="all">전체</option>
+                        {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {subscriptions.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center shadow-sm">
@@ -457,14 +536,44 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {subscriptions.map((subscription) => (
-                <SubscriptionCardDB
-                  key={subscription.id}
-                  subscription={subscription}
-                  onToggleActive={handleToggleActive}
-                  onDelete={handleDelete}
-                />
-              ))}
+              {subscriptions
+                .filter((sub) => {
+                  // Search filter
+                  if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+                    return false;
+                  }
+                  // Category filter
+                  if (filterCategory !== 'all' && sub.category !== filterCategory) {
+                    return false;
+                  }
+                  return true;
+                })
+                .sort((a, b) => {
+                  if (sortBy === 'name') return a.name.localeCompare(b.name);
+                  if (sortBy === 'price') {
+                    const priceA = a.currency === 'USD' ? a.price * exchangeRate : a.price;
+                    const priceB = b.currency === 'USD' ? b.price * exchangeRate : b.price;
+                    return priceB - priceA;
+                  }
+                  return a.billingDay - b.billingDay;
+                })
+                .map((subscription) => (
+                  <SubscriptionCardDB
+                    key={subscription.id}
+                    subscription={subscription}
+                    onToggleActive={handleToggleActive}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              {subscriptions.filter((sub) => {
+                if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                if (filterCategory !== 'all' && sub.category !== filterCategory) return false;
+                return true;
+              }).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  검색 결과가 없습니다.
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -551,6 +660,20 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 dark:border-gray-800 mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <p>MySubs - 구독 관리의 시작</p>
+            <div className="flex gap-4">
+              <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white">이용약관</Link>
+              <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white">개인정보처리방침</Link>
+              <Link href="/contact" className="hover:text-gray-900 dark:hover:text-white">문의하기</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Modal */}
       <AddSubscriptionModal
