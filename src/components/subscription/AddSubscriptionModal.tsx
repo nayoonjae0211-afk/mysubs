@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Search } from 'lucide-react';
+import { X, Search, Clock, Users, AlertTriangle } from 'lucide-react';
 import { useSubscriptionStore } from '@/store/subscription';
 import {
   SUBSCRIPTION_PRESETS,
@@ -32,6 +32,13 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
   const [billingDay, setBillingDay] = useState('1');
   const [category, setCategory] = useState<SubscriptionCategory>('other');
 
+  // 새 기능 state
+  const [isTrial, setIsTrial] = useState(false);
+  const [trialEndDate, setTrialEndDate] = useState('');
+  const [isShared, setIsShared] = useState(false);
+  const [sharedWith, setSharedWith] = useState('2');
+  const [autoRenewal, setAutoRenewal] = useState(true);
+
   const { addSubscription } = useSubscriptionStore();
 
   const filteredPresets = SUBSCRIPTION_PRESETS.filter((preset) =>
@@ -44,6 +51,18 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
     setPrice(preset.defaultPrice.toString());
     setCurrency(preset.currency);
     setCategory(preset.category);
+
+    // 무료 체험 정보 자동 설정
+    if (preset.hasFreeTrial && preset.trialDays) {
+      setIsTrial(true);
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + preset.trialDays);
+      setTrialEndDate(endDate.toISOString().split('T')[0]);
+    } else {
+      setIsTrial(false);
+      setTrialEndDate('');
+    }
+
     setStep('custom');
   };
 
@@ -53,13 +72,17 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
     setPrice('');
     setCurrency('KRW');
     setCategory('other');
+    setIsTrial(false);
+    setTrialEndDate('');
+    setIsShared(false);
+    setSharedWith('2');
     setStep('custom');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const subscriptionData = {
+    const subscriptionData: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'> = {
       name,
       price: parseFloat(price),
       currency,
@@ -68,6 +91,14 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
       category,
       startDate: new Date().toISOString(),
       isActive: true,
+      isTrial: isTrial,
+      trialEndDate: isTrial && trialEndDate ? trialEndDate : undefined,
+      isShared: isShared,
+      sharedWith: isShared ? parseInt(sharedWith) : undefined,
+      myShare: isShared ? Math.round(parseFloat(price) / parseInt(sharedWith)) : undefined,
+      autoRenewal: autoRenewal,
+      logoUrl: selectedPreset?.icon,
+      cancelUrl: selectedPreset?.cancelUrl,
     };
 
     if (onAdd) {
@@ -89,6 +120,11 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
     setBillingCycle('monthly');
     setBillingDay('1');
     setCategory('other');
+    setIsTrial(false);
+    setTrialEndDate('');
+    setIsShared(false);
+    setSharedWith('2');
+    setAutoRenewal(true);
     onClose();
   };
 
@@ -143,17 +179,27 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
                     className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center text-lg font-bold text-gray-500 dark:text-gray-400">
-                        {preset.name.charAt(0)}
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                        style={{ backgroundColor: `${preset.color}20` }}
+                      >
+                        {preset.icon}
                       </div>
                       <div className="text-left">
-                        <p className="font-medium text-gray-900 dark:text-white">{preset.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900 dark:text-white">{preset.name}</p>
+                          {preset.hasFreeTrial && (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full">
+                              무료체험
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {CATEGORY_LABELS[preset.category]}
                         </p>
                       </div>
                     </div>
-                    <span className="text-gray-600 dark:text-gray-300">
+                    <span className="text-gray-600 dark:text-gray-300 font-medium">
                       {preset.currency === 'USD' ? '$' : '₩'}
                       {preset.defaultPrice.toLocaleString()}
                     </span>
@@ -267,6 +313,92 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">추가 옵션</p>
+
+                {/* Free Trial Toggle */}
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <Clock size={20} className="text-green-500" />
+                      <span className="text-gray-700 dark:text-gray-300">무료 체험 중</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={isTrial}
+                      onChange={(e) => setIsTrial(e.target.checked)}
+                      className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </label>
+
+                  {isTrial && (
+                    <div className="pl-4">
+                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        체험 종료일
+                      </label>
+                      <input
+                        type="date"
+                        value={trialEndDate}
+                        onChange={(e) => setTrialEndDate(e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-600 rounded-lg text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  )}
+
+                  {/* Shared Subscription Toggle */}
+                  <label className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <Users size={20} className="text-blue-500" />
+                      <span className="text-gray-700 dark:text-gray-300">공유 구독</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={isShared}
+                      onChange={(e) => setIsShared(e.target.checked)}
+                      className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </label>
+
+                  {isShared && (
+                    <div className="pl-4 space-y-2">
+                      <label className="block text-sm text-gray-600 dark:text-gray-400">
+                        나누는 인원 수
+                      </label>
+                      <select
+                        value={sharedWith}
+                        onChange={(e) => setSharedWith(e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-600 rounded-lg text-gray-900 dark:text-white"
+                      >
+                        {[2, 3, 4, 5, 6].map((num) => (
+                          <option key={num} value={num}>
+                            {num}명
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">
+                        내 부담: {currency === 'USD' ? '$' : '₩'}
+                        {Math.round(parseFloat(price || '0') / parseInt(sharedWith)).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Auto Renewal Warning Toggle */}
+                  <label className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle size={20} className="text-orange-500" />
+                      <span className="text-gray-700 dark:text-gray-300">자동 갱신</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={autoRenewal}
+                      onChange={(e) => setAutoRenewal(e.target.checked)}
+                      className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                  </label>
+                </div>
               </div>
 
               {/* Buttons */}
