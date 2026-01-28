@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(vercel env:*)",
+      "Bash(npx vercel env:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix Stripe connection: remove invalid API version\n\nThe hardcoded apiVersion ''2025-12-15.clover'' was causing connection failures.\nLet Stripe SDK use its default compatible API version.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix Stripe initialization: lazy load with env validation\n\n- Changed from static initialization to lazy getStripe\\(\\) function\n- Validates STRIPE_SECRET_KEY before creating client\n- Prevents connection errors from undefined env vars at module load\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm install)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
