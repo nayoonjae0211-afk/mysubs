@@ -1,34 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
-// Stripe Checkout Session API
 
 export async function POST(request: Request) {
   try {
-    // 환경변수 디버그
-    const secretKey = process.env.STRIPE_SECRET_KEY;
     const priceId = process.env.STRIPE_PRICE_ID;
-
-    console.log('ENV Check:', {
-      hasSecretKey: !!secretKey,
-      secretKeyPrefix: secretKey?.substring(0, 10),
-      hasPriceId: !!priceId,
-      priceIdPrefix: priceId?.substring(0, 10),
-    });
-
-    if (!secretKey) {
-      return NextResponse.json(
-        { error: 'STRIPE_SECRET_KEY 환경변수가 설정되지 않았습니다.' },
-        { status: 500 }
-      );
-    }
-
-    if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
-      return NextResponse.json(
-        { error: `잘못된 STRIPE_SECRET_KEY 형식: ${secretKey.substring(0, 10)}...` },
-        { status: 500 }
-      );
-    }
 
     if (!priceId) {
       return NextResponse.json(
@@ -50,9 +26,6 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     const origin = request.headers.get('origin') || request.headers.get('referer')?.replace(/\/[^/]*$/, '') || '';
 
-    console.log('Creating checkout session for user:', user.id);
-
-    // Checkout 세션 생성
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       line_items: [
@@ -69,19 +42,9 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log('Checkout session created:', session.id);
-
     return NextResponse.json({ url: session.url });
   } catch (error: unknown) {
     console.error('Stripe checkout error:', error);
-
-    // 더 자세한 에러 정보
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-
     const message = error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json(
