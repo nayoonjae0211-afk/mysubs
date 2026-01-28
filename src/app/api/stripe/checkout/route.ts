@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
+// Stripe Checkout Session API
 
 export async function POST(request: Request) {
   try {
