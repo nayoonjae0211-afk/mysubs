@@ -57,13 +57,16 @@ export async function POST(request: Request) {
       const status = subscription.status;
       const isPro = status === 'active' || status === 'trialing';
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const periodEnd = (subscription as any).current_period_end;
+
       await supabaseAdmin
         .from('user_profiles')
         .update({
           is_pro: isPro,
           subscription_status: status,
-          subscription_end_date: subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
+          subscription_end_date: periodEnd
+            ? new Date(periodEnd * 1000).toISOString()
             : null,
         })
         .eq('stripe_customer_id', customerId);

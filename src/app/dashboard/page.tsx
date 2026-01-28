@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles } from 'lucide-react';
@@ -12,6 +12,26 @@ import SubscriptionCardDB from '@/components/subscription/SubscriptionCardDB';
 import type { User } from '@supabase/supabase-js';
 
 const FREE_LIMIT = 5; // 무료 사용자 구독 제한
+
+// SearchParams를 사용하는 컴포넌트를 분리
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 5000);
+    }
+  }, [searchParams]);
+
+  return showSuccessMessage ? (
+    <div className="bg-green-500 text-white text-center py-3 px-4">
+      <Sparkles className="inline mr-2" size={20} />
+      프로 플랜으로 업그레이드되었습니다! 이제 무제한으로 이용하세요.
+    </div>
+  ) : null;
+}
 
 // DB에서 가져온 구독을 프론트엔드 타입으로 변환
 interface DBSubscription {
@@ -53,9 +73,7 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   // 사용자 및 구독 데이터 로드
@@ -92,16 +110,10 @@ export default function DashboardPage() {
       }
 
       setLoading(false);
-
-      // 결제 성공 메시지
-      if (searchParams.get('success') === 'true') {
-        setShowSuccessMessage(true);
-        setTimeout(() => setShowSuccessMessage(false), 5000);
-      }
     }
 
     loadData();
-  }, [router, supabase, searchParams]);
+  }, [router, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -212,12 +224,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* 결제 성공 메시지 */}
-      {showSuccessMessage && (
-        <div className="bg-green-500 text-white text-center py-3 px-4">
-          <Sparkles className="inline mr-2" size={20} />
-          프로 플랜으로 업그레이드되었습니다! 이제 무제한으로 이용하세요.
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <DashboardContent />
+      </Suspense>
 
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
