@@ -55,12 +55,27 @@ export default function SubscriptionCardDB({ subscription, onToggleActive, onDel
       <div className="flex items-center gap-4">
         {/* Icon/Avatar */}
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg ${
+          className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${
             preset ? '' : `text-white font-bold ${CATEGORY_COLORS[subscription.category]}`
           }`}
           style={preset ? { backgroundColor: `${preset.color}20` } : undefined}
         >
-          {preset?.icon || subscription.logoUrl || subscription.name.charAt(0)}
+          {preset?.logoUrl ? (
+            <img
+              src={preset.logoUrl}
+              alt={subscription.name}
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const parent = e.currentTarget.parentElement;
+                if (parent) {
+                  parent.innerHTML = `<span class="text-lg font-bold" style="color: ${preset.color}">${subscription.name.charAt(0)}</span>`;
+                }
+              }}
+            />
+          ) : (
+            <span className="text-lg font-bold">{subscription.name.charAt(0)}</span>
+          )}
         </div>
 
         {/* Info */}

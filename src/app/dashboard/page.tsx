@@ -62,9 +62,6 @@ interface DBSubscription {
   start_date: string;
   is_active: boolean;
   memo: string | null;
-  tags: string[] | null;
-  display_order: number | null;
-  annual_price: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -81,9 +78,6 @@ function dbToFrontend(db: DBSubscription): Subscription {
     startDate: db.start_date,
     isActive: db.is_active,
     memo: db.memo || undefined,
-    tags: db.tags || undefined,
-    displayOrder: db.display_order || undefined,
-    annualPrice: db.annual_price || undefined,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   };
@@ -204,13 +198,17 @@ export default function DashboardPage() {
         start_date: subscription.startDate,
         is_active: subscription.isActive,
         memo: subscription.memo,
-        tags: subscription.tags,
-        display_order: subscriptions.length,
       })
       .select()
       .single();
 
-    if (!error && data) {
+    if (error) {
+      console.error('Failed to add subscription:', error);
+      alert('구독 추가에 실패했습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    if (data) {
       setSubscriptions((prev) => [dbToFrontend(data), ...prev]);
     }
   };

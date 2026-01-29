@@ -121,7 +121,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
       autoRenewal: autoRenewal,
       memo: memo || undefined,
       tags: tags.length > 0 ? tags : undefined,
-      logoUrl: selectedPreset?.icon,
+      logoUrl: selectedPreset?.logoUrl,
       cancelUrl: selectedPreset?.cancelUrl,
     };
 
@@ -207,10 +207,18 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                         style={{ backgroundColor: `${preset.color}20` }}
                       >
-                        {preset.icon}
+                        <img
+                          src={preset.logoUrl}
+                          alt={preset.name}
+                          className="w-7 h-7 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = `<span class="text-lg font-bold" style="color: ${preset.color}">${preset.name.charAt(0)}</span>`;
+                          }}
+                        />
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
