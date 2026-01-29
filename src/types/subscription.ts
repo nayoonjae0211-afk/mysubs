@@ -105,6 +105,11 @@ export const SUBSCRIPTION_PRESETS: SubscriptionPreset[] = [
   { name: 'EA Play', category: 'gaming', defaultPrice: 5900, currency: 'KRW', logoUrl: getFaviconUrl('ea.com'), color: '#FF4747', cancelUrl: 'https://www.ea.com/ea-play' },
   { name: 'Ubisoft+', category: 'gaming', defaultPrice: 14.99, currency: 'USD', logoUrl: getFaviconUrl('ubisoft.com'), color: '#0070FF', cancelUrl: 'https://plus.ubisoft.com' },
 
+  // Kakao
+  { name: '카카오톡 이모티콘 플러스', category: 'other', defaultPrice: 4900, currency: 'KRW', logoUrl: getFaviconUrl('emoticon.kakao.com'), color: '#FEE500', cancelUrl: 'https://my.kakao.com/product/EMOTICON001' },
+  { name: '톡클라우드', category: 'cloud', defaultPrice: 2100, currency: 'KRW', logoUrl: getFaviconUrl('drive.kakao.com'), color: '#FEE500', cancelUrl: 'https://my.kakao.com/product/DRIVE001' },
+  { name: '카카오 T 멤버스', category: 'other', defaultPrice: 4900, currency: 'KRW', logoUrl: getFaviconUrl('kakaomobility.com'), color: '#FEE500', cancelUrl: 'https://www.kakaomobility.com' },
+
   // Cloud
   { name: 'iCloud+', category: 'cloud', defaultPrice: 1100, currency: 'KRW', logoUrl: getFaviconUrl('icloud.com'), color: '#3693F3', cancelUrl: 'https://support.apple.com/ko-kr/HT207594' },
   { name: 'Google One', category: 'cloud', defaultPrice: 2500, currency: 'KRW', logoUrl: getFaviconUrl('one.google.com'), color: '#4285F4', cancelUrl: 'https://one.google.com/settings' },
