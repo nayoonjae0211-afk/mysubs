@@ -1,7 +1,22 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CreditCard, Bell, PieChart, Smartphone, ArrowRight, Check } from 'lucide-react';
+import { CreditCard, Bell, PieChart, Smartphone, ArrowRight, Check, LayoutDashboard } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LandingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+  }, [supabase.auth]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
@@ -11,18 +26,35 @@ export default function LandingPage() {
             MySubs
           </h1>
           <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              로그인
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              무료로 시작
-            </Link>
+            {isLoggedIn === null ? (
+              // 로딩 중
+              <div className="w-24 h-10" />
+            ) : isLoggedIn ? (
+              // 로그인된 상태
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <LayoutDashboard size={18} />
+                대시보드
+              </Link>
+            ) : (
+              // 로그인되지 않은 상태
+              <>
+                <Link
+                  href="/auth/login"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  무료로 시작
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -41,19 +73,31 @@ export default function LandingPage() {
             MySubs로 숨겨진 지출을 찾고, 불필요한 구독을 정리하세요.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-lg"
-            >
-              무료로 시작하기
-              <ArrowRight size={20} />
-            </Link>
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-lg"
-            >
-              로그인
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-lg"
+              >
+                <LayoutDashboard size={20} />
+                대시보드로 이동
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-lg"
+                >
+                  무료로 시작하기
+                  <ArrowRight size={20} />
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-lg"
+                >
+                  로그인
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -147,10 +191,10 @@ export default function LandingPage() {
               </li>
             </ul>
             <Link
-              href="/auth/signup"
+              href={isLoggedIn ? "/dashboard" : "/auth/signup"}
               className="block w-full py-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              무료로 시작
+              {isLoggedIn ? "대시보드로 이동" : "무료로 시작"}
             </Link>
           </div>
 
@@ -204,11 +248,20 @@ export default function LandingPage() {
             가입은 30초, 구독 정리는 평생의 절약
           </p>
           <Link
-            href="/auth/signup"
+            href={isLoggedIn ? "/dashboard" : "/auth/signup"}
             className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-lg"
           >
-            무료로 시작하기
-            <ArrowRight size={20} />
+            {isLoggedIn ? (
+              <>
+                <LayoutDashboard size={20} />
+                대시보드로 이동
+              </>
+            ) : (
+              <>
+                무료로 시작하기
+                <ArrowRight size={20} />
+              </>
+            )}
           </Link>
         </div>
       </section>
