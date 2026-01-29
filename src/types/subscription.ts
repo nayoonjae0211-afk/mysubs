@@ -64,13 +64,13 @@ export const SUBSCRIPTION_PRESETS: SubscriptionPreset[] = [
   { name: '왓챠', category: 'streaming', defaultPrice: 12900, currency: 'KRW', logoUrl: getFaviconUrl('watcha.com'), color: '#FF0558', cancelUrl: 'https://watcha.com/settings/payment' },
   { name: '웨이브', category: 'streaming', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('wavve.com'), color: '#1E3264', cancelUrl: 'https://www.wavve.com/my/subscription' },
   { name: '티빙', category: 'streaming', defaultPrice: 13900, currency: 'KRW', logoUrl: getFaviconUrl('tving.com'), color: '#FF0A54', cancelUrl: 'https://www.tving.com/my/membership' },
-  { name: '쿠팡플레이', category: 'streaming', defaultPrice: 4990, currency: 'KRW', logoUrl: getFaviconUrl('coupangplay.com'), color: '#E31837', cancelUrl: 'https://www.coupang.com/np/coupangplay' },
+  { name: '쿠팡플레이', category: 'streaming', defaultPrice: 7890, currency: 'KRW', logoUrl: getFaviconUrl('coupangplay.com'), color: '#E31837', cancelUrl: 'https://www.coupang.com/np/coupangplay' },
   { name: 'Apple TV+', category: 'streaming', defaultPrice: 9900, currency: 'KRW', logoUrl: getFaviconUrl('tv.apple.com'), color: '#000000', cancelUrl: 'https://support.apple.com/ko-kr/HT202039', hasFreeTrial: true, trialDays: 7 },
   { name: 'Amazon Prime Video', category: 'streaming', defaultPrice: 5900, currency: 'KRW', logoUrl: getFaviconUrl('primevideo.com'), color: '#00A8E1', cancelUrl: 'https://www.amazon.com/mc' },
 
   // Music
   { name: '멜론', category: 'music', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('melon.com'), color: '#00CD3C', cancelUrl: 'https://www.melon.com/mypay/main.htm' },
-  { name: '스포티파이', category: 'music', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('spotify.com'), color: '#1DB954', cancelUrl: 'https://www.spotify.com/account/subscription/', hasFreeTrial: true, trialDays: 30 },
+  { name: '스포티파이', category: 'music', defaultPrice: 11990, currency: 'KRW', logoUrl: getFaviconUrl('spotify.com'), color: '#1DB954', cancelUrl: 'https://www.spotify.com/account/subscription/', hasFreeTrial: true, trialDays: 30 },
   { name: '애플뮤직', category: 'music', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('music.apple.com'), color: '#FA243C', cancelUrl: 'https://support.apple.com/ko-kr/HT202039', hasFreeTrial: true, trialDays: 30 },
   { name: '지니뮤직', category: 'music', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('genie.co.kr'), color: '#5A4FCF', cancelUrl: 'https://www.genie.co.kr/myInfo/payInfo' },
   { name: '플로', category: 'music', defaultPrice: 10900, currency: 'KRW', logoUrl: getFaviconUrl('music-flo.com'), color: '#7C3AED', cancelUrl: 'https://www.music-flo.com/my/ticket' },
@@ -92,22 +92,22 @@ export const SUBSCRIPTION_PRESETS: SubscriptionPreset[] = [
   { name: 'Cursor', category: 'productivity', defaultPrice: 20, currency: 'USD', logoUrl: getFaviconUrl('cursor.sh'), color: '#000000', cancelUrl: 'https://cursor.sh' },
 
   // Shopping
-  { name: '쿠팡 로켓와우', category: 'shopping', defaultPrice: 4990, currency: 'KRW', logoUrl: getFaviconUrl('coupang.com'), color: '#E31837', cancelUrl: 'https://www.coupang.com/np/rocketwow', hasFreeTrial: true, trialDays: 30 },
+  { name: '쿠팡 로켓와우', category: 'shopping', defaultPrice: 7890, currency: 'KRW', logoUrl: getFaviconUrl('coupang.com'), color: '#E31837', cancelUrl: 'https://www.coupang.com/np/rocketwow', hasFreeTrial: true, trialDays: 30 },
   { name: '네이버플러스 멤버십', category: 'shopping', defaultPrice: 4900, currency: 'KRW', logoUrl: getFaviconUrl('naver.com'), color: '#03C75A', cancelUrl: 'https://nid.naver.com/membership/my', hasFreeTrial: true, trialDays: 30 },
   { name: '아마존 프라임', category: 'shopping', defaultPrice: 14.99, currency: 'USD', logoUrl: getFaviconUrl('amazon.com'), color: '#FF9900', cancelUrl: 'https://www.amazon.com/mc', hasFreeTrial: true, trialDays: 30 },
   { name: '마켓컬리 컬리패스', category: 'shopping', defaultPrice: 4900, currency: 'KRW', logoUrl: getFaviconUrl('kurly.com'), color: '#5F0080', cancelUrl: 'https://www.kurly.com/mypage/membership' },
   { name: 'SSG 멤버십', category: 'shopping', defaultPrice: 3000, currency: 'KRW', logoUrl: getFaviconUrl('ssg.com'), color: '#FF5A5F', cancelUrl: 'https://www.ssg.com' },
 
   // Gaming
-  { name: 'Xbox Game Pass', category: 'gaming', defaultPrice: 14900, currency: 'KRW', logoUrl: getFaviconUrl('xbox.com'), color: '#107C10', cancelUrl: 'https://account.microsoft.com/services/gamepass', hasFreeTrial: true, trialDays: 14 },
-  { name: 'PlayStation Plus', category: 'gaming', defaultPrice: 14900, currency: 'KRW', logoUrl: getFaviconUrl('playstation.com'), color: '#003791', cancelUrl: 'https://www.playstation.com/ko-kr/playstation-plus/' },
+  { name: 'Xbox Game Pass', category: 'gaming', defaultPrice: 18500, currency: 'KRW', logoUrl: getFaviconUrl('xbox.com'), color: '#107C10', cancelUrl: 'https://account.microsoft.com/services/gamepass', hasFreeTrial: true, trialDays: 14 },
+  { name: 'PlayStation Plus', category: 'gaming', defaultPrice: 10800, currency: 'KRW', logoUrl: getFaviconUrl('playstation.com'), color: '#003791', cancelUrl: 'https://www.playstation.com/ko-kr/playstation-plus/' },
   { name: 'Nintendo Switch Online', category: 'gaming', defaultPrice: 4900, currency: 'KRW', logoUrl: getFaviconUrl('nintendo.com'), color: '#E60012', cancelUrl: 'https://accounts.nintendo.com/shop/subscriptions', hasFreeTrial: true, trialDays: 7 },
   { name: 'EA Play', category: 'gaming', defaultPrice: 5900, currency: 'KRW', logoUrl: getFaviconUrl('ea.com'), color: '#FF4747', cancelUrl: 'https://www.ea.com/ea-play' },
   { name: 'Ubisoft+', category: 'gaming', defaultPrice: 14.99, currency: 'USD', logoUrl: getFaviconUrl('ubisoft.com'), color: '#0070FF', cancelUrl: 'https://plus.ubisoft.com' },
 
   // Cloud
   { name: 'iCloud+', category: 'cloud', defaultPrice: 1100, currency: 'KRW', logoUrl: getFaviconUrl('icloud.com'), color: '#3693F3', cancelUrl: 'https://support.apple.com/ko-kr/HT207594' },
-  { name: 'Google One', category: 'cloud', defaultPrice: 2400, currency: 'KRW', logoUrl: getFaviconUrl('one.google.com'), color: '#4285F4', cancelUrl: 'https://one.google.com/settings' },
+  { name: 'Google One', category: 'cloud', defaultPrice: 2500, currency: 'KRW', logoUrl: getFaviconUrl('one.google.com'), color: '#4285F4', cancelUrl: 'https://one.google.com/settings' },
   { name: 'Dropbox', category: 'cloud', defaultPrice: 11.99, currency: 'USD', logoUrl: getFaviconUrl('dropbox.com'), color: '#0061FF', cancelUrl: 'https://www.dropbox.com/account/plans', hasFreeTrial: true, trialDays: 30 },
   { name: 'OneDrive', category: 'cloud', defaultPrice: 1900, currency: 'KRW', logoUrl: getFaviconUrl('onedrive.com'), color: '#0078D4', cancelUrl: 'https://account.microsoft.com/services' },
 
