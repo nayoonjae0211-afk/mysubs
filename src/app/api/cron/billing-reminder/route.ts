@@ -34,6 +34,15 @@ export async function GET(request: Request) {
     for (const user of users.users) {
       if (!user.email) continue;
 
+      // Pro 사용자만 알림 발송 (Pro 전용 기능)
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.is_pro) continue;
+
       // 사용자의 활성 구독 가져오기
       const { data: subscriptions, error: subsError } = await supabase
         .from('subscriptions')

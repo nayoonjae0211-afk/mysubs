@@ -152,10 +152,10 @@ export default function DashboardPage() {
         setIsPro(profile.is_pro);
       }
 
+      // display_order 컬럼이 없을 수 있으므로 created_at으로만 정렬
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -240,22 +240,11 @@ export default function DashboardPage() {
     }
   };
 
-  // 드래그 앤 드롭 순서 변경
+  // 드래그 앤 드롭 순서 변경 (UI에서만 적용, DB 저장은 display_order 컬럼 필요)
   const handleReorder = async (newOrder: Subscription[]) => {
     setSubscriptions(newOrder);
-
-    // DB에 순서 저장
-    const updates = newOrder.map((sub, index) => ({
-      id: sub.id,
-      display_order: index,
-    }));
-
-    for (const update of updates) {
-      await supabase
-        .from('subscriptions')
-        .update({ display_order: update.display_order })
-        .eq('id', update.id);
-    }
+    // 참고: DB에 순서를 저장하려면 subscriptions 테이블에 display_order 컬럼을 추가해야 합니다.
+    // ALTER TABLE subscriptions ADD COLUMN display_order INTEGER;
   };
 
   // 계산 함수들
@@ -450,41 +439,45 @@ export default function DashboardPage() {
                 <span className="hidden sm:inline">구독 추가</span>
               </button>
 
-              {/* Export Menu */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  title="내보내기"
-                >
-                  <Download size={20} />
-                </button>
-                {showExportMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
+              {isPro && (
+                <>
+                  {/* Export Menu - Pro Only */}
+                  <div className="relative">
                     <button
-                      onClick={() => { exportToCSV(subscriptions, exchangeRate); setShowExportMenu(false); }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      title="내보내기"
                     >
-                      <FileSpreadsheet size={16} />
-                      CSV로 내보내기
+                      <Download size={20} />
                     </button>
-                    <button
-                      onClick={() => { exportToExcel(subscriptions, exchangeRate); setShowExportMenu(false); }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                    >
-                      <FileSpreadsheet size={16} />
-                      Excel로 내보내기
-                    </button>
-                    <button
-                      onClick={() => { exportToJSON(subscriptions); setShowExportMenu(false); }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                    >
-                      <FileJson size={16} />
-                      JSON으로 내보내기
-                    </button>
+                    {showExportMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
+                        <button
+                          onClick={() => { exportToCSV(subscriptions, exchangeRate); setShowExportMenu(false); }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        >
+                          <FileSpreadsheet size={16} />
+                          CSV로 내보내기
+                        </button>
+                        <button
+                          onClick={() => { exportToExcel(subscriptions, exchangeRate); setShowExportMenu(false); }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        >
+                          <FileSpreadsheet size={16} />
+                          Excel로 내보내기
+                        </button>
+                        <button
+                          onClick={() => { exportToJSON(subscriptions); setShowExportMenu(false); }}
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        >
+                          <FileJson size={16} />
+                          JSON으로 내보내기
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
               {isPro && (
                 <>
