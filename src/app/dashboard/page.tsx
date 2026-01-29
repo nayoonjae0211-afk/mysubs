@@ -6,7 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
   Plus, Wallet, TrendingUp, Calendar, CreditCard, LogOut, Loader2, Crown, Sparkles,
-  RefreshCw, PieChart, Settings, Search, SlidersHorizontal, Sun, Moon, Download,
+  RefreshCw, PieChart, Settings, Search, SlidersHorizontal, Download,
   FileSpreadsheet, FileJson, Bell, BarChart3, GripVertical, Tag
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -15,7 +15,6 @@ import { CATEGORY_LABELS, CATEGORY_COLORS, Subscription, SubscriptionCategory } 
 import AddSubscriptionModal from '@/components/subscription/AddSubscriptionModal';
 import SubscriptionCardDB from '@/components/subscription/SubscriptionCardDB';
 import DraggableSubscriptionList from '@/components/subscription/DraggableSubscriptionList';
-import { useTheme } from '@/components/ThemeProvider';
 import { exportToCSV, exportToExcel, exportToJSON } from '@/lib/export';
 import type { User } from '@supabase/supabase-js';
 
@@ -99,7 +98,6 @@ export default function DashboardPage() {
   const [enableDragDrop, setEnableDragDrop] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-  const { theme, setTheme, resolvedTheme } = useTheme();
 
   // Pro 사용자 구독 관리 (Stripe Portal)
   const handleManageSubscription = async () => {
@@ -412,15 +410,6 @@ export default function DashboardPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {/* Theme Toggle */}
-              <button
-                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title={resolvedTheme === 'dark' ? '라이트 모드' : '다크 모드'}
-              >
-                {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-
               {!isPro && (
                 <Link
                   href="/pricing"
