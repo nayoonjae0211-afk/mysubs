@@ -9,6 +9,8 @@ export interface Subscription {
   startDate: string;
   isActive: boolean;
   memo?: string;
+  tags?: string[]; // 사용자 정의 태그
+  displayOrder?: number; // 사용자 정의 정렬 순서
   // 무료 체험 관련
   isTrial?: boolean;
   trialEndDate?: string;
@@ -18,6 +20,8 @@ export interface Subscription {
   myShare?: number; // 내 부담 금액
   // 자동 갱신 경고
   autoRenewal?: boolean;
+  // 연간 결제 전환 시 절약 예상액
+  annualPrice?: number; // 연간 결제 가격 (있는 경우)
   // 메타데이터
   logoUrl?: string;
   cancelUrl?: string; // 해지 페이지 URL

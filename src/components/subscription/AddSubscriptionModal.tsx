@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Search, Clock, Users, AlertTriangle } from 'lucide-react';
+import { X, Search, Clock, Users, AlertTriangle, Tag, StickyNote } from 'lucide-react';
 import { useSubscriptionStore } from '@/store/subscription';
 import {
   SUBSCRIPTION_PRESETS,
@@ -38,6 +38,9 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
   const [isShared, setIsShared] = useState(false);
   const [sharedWith, setSharedWith] = useState('2');
   const [autoRenewal, setAutoRenewal] = useState(true);
+  const [memo, setMemo] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
 
   const { addSubscription } = useSubscriptionStore();
 
@@ -79,6 +82,25 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
     setStep('custom');
   };
 
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim().toLowerCase();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,6 +119,8 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
       sharedWith: isShared ? parseInt(sharedWith) : undefined,
       myShare: isShared ? Math.round(parseFloat(price) / parseInt(sharedWith)) : undefined,
       autoRenewal: autoRenewal,
+      memo: memo || undefined,
+      tags: tags.length > 0 ? tags : undefined,
       logoUrl: selectedPreset?.icon,
       cancelUrl: selectedPreset?.cancelUrl,
     };
@@ -125,6 +149,9 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
     setIsShared(false);
     setSharedWith('2');
     setAutoRenewal(true);
+    setMemo('');
+    setTagInput('');
+    setTags([]);
     onClose();
   };
 
@@ -398,6 +425,65 @@ export default function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) 
                       className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
                     />
                   </label>
+
+                  {/* Memo */}
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <StickyNote size={20} className="text-yellow-500" />
+                      <span className="text-gray-700 dark:text-gray-300">메모</span>
+                    </div>
+                    <textarea
+                      value={memo}
+                      onChange={(e) => setMemo(e.target.value)}
+                      placeholder="메모를 입력하세요..."
+                      rows={2}
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-600 rounded-lg text-sm text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Tags */}
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Tag size={20} className="text-purple-500" />
+                      <span className="text-gray-700 dark:text-gray-300">태그</span>
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        placeholder="태그 입력 후 Enter"
+                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddTag}
+                        className="px-3 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600"
+                      >
+                        추가
+                      </button>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs rounded-full"
+                          >
+                            #{tag}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(tag)}
+                              className="hover:text-purple-900 dark:hover:text-purple-100"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
